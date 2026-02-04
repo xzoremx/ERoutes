@@ -1,6 +1,0 @@
-{
-  "buildCommand": "cd web-react && npm install && npm run build",
-  "outputDirectory": "web-react/.next",
-  "installCommand": "cd web-react && npm install",
-  "framework": "nextjs"
-}
