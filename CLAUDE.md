@@ -69,6 +69,11 @@ ERoutes/
 - **Frontend**: Vercel (Next.js)
 - **Dev local (opcional)**: `api/docker-compose.yml` para PostGIS local
 
+### Archivos de Deploy (Backend)
+- `api/Dockerfile` - Multi-stage build (Node 22 Alpine)
+- `api/railway.toml` - Configuración de Railway
+- `api/.env.example` - Template de variables de entorno
+
 ## Comandos Útiles
 
 ```bash
@@ -77,6 +82,10 @@ npm install          # Instalar dependencias
 npm run dev          # Servidor de desarrollo
 npm run build        # Compilar TypeScript
 npm run test         # Ejecutar tests
+
+# Docker local (opcional)
+docker build -t eroutes-api .
+docker run -p 3001:3001 --env-file .env eroutes-api
 
 # Frontend (desde web-react/)
 npm install          # Instalar dependencias
@@ -91,19 +100,21 @@ npm run lint         # Linter
 ### Backend (`api/.env`)
 ```
 PORT=3001
-DATABASE_URL=postgresql://USER:PASSWORD@HOST:5432/postgres
+DATABASE_URL=postgresql://postgres.[REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:5432/postgres
 GOOGLE_MAPS_API_KEY=
 OSINERGMIN_DATA_URL=
-SUPABASE_URL=
-SUPABASE_KEY=
-OSINERGMIN_REGION_FILTER=
-ROUTING_PROVIDER=
+OSINERGMIN_REGION_FILTER=LIMA
+ROUTING_PROVIDER=google
+CORS_ALLOWED_ORIGINS=http://localhost:3000
+LOG_LEVEL=info
 ```
 
 ### Frontend (`web-react/.env.local`)
 ```
 NEXT_PUBLIC_API_BASE_URL=http://localhost:3001
 NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=
+NEXT_PUBLIC_SUPABASE_URL=https://[REF].supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
 ```
 
 ## Convenciones de Código
@@ -140,6 +151,37 @@ NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=
 - `GET /api/stations` - Listar estaciones de servicio
 - `GET /api/sites` - Obtener sedes configuradas
 - `GET /health` - Health check
+
+## Deploy en Railway (Backend)
+
+### Requisitos
+1. Cuenta en Railway (https://railway.app)
+2. Proyecto de Supabase con PostgreSQL + PostGIS habilitado
+
+### Pasos para Deploy
+1. Crear nuevo proyecto en Railway
+2. Conectar repositorio GitHub (carpeta `api/`)
+3. Configurar variables de entorno en Railway:
+   - `DATABASE_URL` (connection string de Supabase con `?sslmode=require`)
+   - `GOOGLE_MAPS_API_KEY`
+   - `CORS_ALLOWED_ORIGINS` (dominio de Vercel)
+   - `NODE_ENV=production`
+4. Railway detectará automáticamente el `Dockerfile` y `railway.toml`
+5. El health check está en `/health`
+
+### Variables de Entorno Railway (Backend)
+```
+NODE_ENV=production
+DATABASE_URL=postgresql://postgres.[REF]:[PASS]@aws-0-[REGION].pooler.supabase.com:5432/postgres
+GOOGLE_MAPS_API_KEY=AIza...
+CORS_ALLOWED_ORIGINS=https://tu-app.vercel.app
+LOG_LEVEL=info
+OSINERGMIN_REGION_FILTER=LIMA
+ROUTING_PROVIDER=google
+```
+
+> **Nota**: El backend usa conexión directa a PostgreSQL (`DATABASE_URL`).
+> Las variables `NEXT_PUBLIC_SUPABASE_*` son solo para el frontend (Next.js).
 
 ## Notas para Desarrollo
 

@@ -9,8 +9,6 @@ const envSchema = z.object({
   DATABASE_URL: z.string().min(1).optional(),
   GOOGLE_MAPS_API_KEY: z.string().min(1).optional(),
   OSINERGMIN_DATA_URL: z.string().min(1).optional(),
-  SUPABASE_URL: z.string().min(1).optional(),
-  SUPABASE_KEY: z.string().min(1).optional(),
   OSINERGMIN_REGION_FILTER: z.string().min(1).optional(),
   ROUTING_PROVIDER: z.string().min(1).optional(),
   CORS_ALLOWED_ORIGINS: z.string().min(1).optional(),

@@ -1,26 +1,8 @@
-version: '3.8'
-
 services:
-  # Base de datos local para desarrollo (Postgres + PostGIS)
-  # Solo necesaria si no te conectas directo a Supabase desde localhost.
   db:
-    image: postgis/postgis:15-3.3-alpine
+    image: postgis/postgis:16-3.4-alpine
     container_name: eroutes_local_db
-    restart: always
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: eroutes_local
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-volumes:
-  postgres_data:
-services:
-  db:
-    image: postgis/postgis:16-3.4
+    restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -28,7 +10,12 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - eroutes-db:/var/lib/postgresql/data
+      - eroutes_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d eroutes"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
-  eroutes-db:
+  eroutes_db:
