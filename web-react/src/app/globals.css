@@ -2,7 +2,25 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Leaflet CSS */
+@import "leaflet/dist/leaflet.css";
+
 html,
 body {
   height: 100%;
+}
+
+/* Fix para marcadores personalizados de Leaflet */
+.custom-marker,
+.custom-pin {
+  background: transparent !important;
+  border: none !important;
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 8px;
+}
+
+.leaflet-popup-content {
+  margin: 8px 12px;
 }

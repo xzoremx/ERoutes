@@ -54,14 +54,16 @@ ERoutes/
 - Node.js + TypeScript
 - Express.js
 - PostgreSQL + PostGIS (para queries geoespaciales)
-- Zod o Joi para validación
+- OSRM (Open Source Routing Machine) para cálculo de rutas
+- Zod para validación
 
 ### Frontend
 - Next.js 14+ con App Router
 - React 18+ con TypeScript
-- Google Maps API para mapas (`@vis.gl/react-google-maps`)
+- Leaflet + OpenStreetMap para mapas (gratuito)
+- OpenRouteService para geocoding (búsqueda de direcciones)
 - Zustand para estado global (ligero, compatible con Server Components)
-- Tailwind CSS (opcional, recomendado)
+- Tailwind CSS
 
 ### Infraestructura
 - **DB**: Supabase (PostgreSQL + PostGIS)
@@ -101,10 +103,9 @@ npm run lint         # Linter
 ```
 PORT=3001
 DATABASE_URL=postgresql://postgres.[REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:5432/postgres
-GOOGLE_MAPS_API_KEY=
+OSRM_BASE_URL=https://router.project-osrm.org
 OSINERGMIN_DATA_URL=
 OSINERGMIN_REGION_FILTER=LIMA
-ROUTING_PROVIDER=google
 CORS_ALLOWED_ORIGINS=http://localhost:3000
 LOG_LEVEL=info
 ```
@@ -112,9 +113,7 @@ LOG_LEVEL=info
 ### Frontend (`web-react/.env.local`)
 ```
 NEXT_PUBLIC_API_BASE_URL=http://localhost:3001
-NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=
-NEXT_PUBLIC_SUPABASE_URL=https://[REF].supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
+NEXT_PUBLIC_ORS_API_KEY=tu-api-key-de-openrouteservice
 ```
 
 ## Convenciones de Código
@@ -162,8 +161,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
 1. Crear nuevo proyecto en Railway
 2. Conectar repositorio GitHub (carpeta `api/`)
 3. Configurar variables de entorno en Railway:
-   - `DATABASE_URL` (connection string de Supabase con `?sslmode=require`)
-   - `GOOGLE_MAPS_API_KEY`
+   - `DATABASE_URL` (connection string de Supabase)
    - `CORS_ALLOWED_ORIGINS` (dominio de Vercel)
    - `NODE_ENV=production`
 4. Railway detectará automáticamente el `Dockerfile` y `railway.toml`
@@ -173,19 +171,20 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
 ```
 NODE_ENV=production
 DATABASE_URL=postgresql://postgres.[REF]:[PASS]@aws-0-[REGION].pooler.supabase.com:5432/postgres
-GOOGLE_MAPS_API_KEY=AIza...
-CORS_ALLOWED_ORIGINS=https://tu-app.vercel.app
+OSRM_BASE_URL=https://router.project-osrm.org
+CORS_ALLOWED_ORIGINS=https://eroutes.vercel.app
 LOG_LEVEL=info
 OSINERGMIN_REGION_FILTER=LIMA
-ROUTING_PROVIDER=google
 ```
 
-> **Nota**: El backend usa conexión directa a PostgreSQL (`DATABASE_URL`).
-> Las variables `NEXT_PUBLIC_SUPABASE_*` son solo para el frontend (Next.js).
+> **Nota**: El backend usa OSRM (gratuito) para routing en lugar de Google Maps API.
+> Google Maps API solo se usa en el frontend para visualización de mapas.
 
 ## Notas para Desarrollo
 
 - Los archivos SQL de migraciones usan prefijos numéricos para orden determinístico
 - Los seeds también usan prefijos (`010_`, `020_`)
 - El motor de recomendaciones considera: distancia, precio, y ruta óptima
-- Google Maps API se usa tanto en backend (routing) como frontend (visualización)
+- **Routing**: OSRM (backend, gratuito) - calcula distancias y tiempos de ruta
+- **Mapas**: Leaflet + OpenStreetMap (frontend, gratuito) - visualización de mapas
+- **Geocoding**: OpenRouteService (frontend, gratuito con límites) - búsqueda de direcciones
