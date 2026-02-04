@@ -162,3 +162,14 @@ body {
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/* Large map style for recommendations page */
+.map-large>div {
+  height: 600px !important;
+}
+
+@media (min-width: 768px) {
+  .map-large>div {
+    height: 700px !important;
+  }
+}
