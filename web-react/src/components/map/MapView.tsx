@@ -75,46 +75,84 @@ function MapViewInternal({ center, zoom, markers = [], onMapClick, className }: 
     shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
   });
 
-  // Crear icono personalizado para marcadores con precio
+  // Crear icono de precio estilo glass con puntero preciso
   function createPriceIcon(priceText: string, color: string = "#0f172a") {
     return L.divIcon({
       className: "custom-marker",
       html: `
         <div style="
-          background: white;
-          border: 2px solid ${color};
-          border-radius: 8px;
-          padding: 4px 8px;
-          font-size: 12px;
-          font-weight: 600;
-          white-space: nowrap;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
         ">
-          ${priceText}
+          <div style="
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.75);
+            border-radius: 10px;
+            padding: 5px 10px;
+            font-family: -apple-system, 'SF Pro Display', 'SF Pro Text', system-ui, BlinkMacSystemFont, sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: -0.2px;
+            color: ${color};
+            white-space: nowrap;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.10), 0 1px 3px rgba(0,0,0,0.06);
+          ">
+            ${priceText}
+          </div>
+          <div style="
+            width: 2px;
+            height: 10px;
+            background: ${color};
+            opacity: 0.6;
+          "></div>
+          <div style="
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: ${color};
+            box-shadow: 0 0 0 2px rgba(255,255,255,0.8);
+          "></div>
         </div>
       `,
-      iconSize: [80, 30],
-      iconAnchor: [40, 30],
+      iconSize: [80, 48],
+      iconAnchor: [40, 48],
     });
   }
 
-  // Crear icono de pin simple
+  // Crear icono de pin simple (para ubicación del usuario, etc.)
   function createPinIcon(color: string = "#0f172a") {
     return L.divIcon({
       className: "custom-pin",
       html: `
         <div style="
-          width: 24px;
-          height: 24px;
-          background: ${color};
-          border: 2px solid white;
-          border-radius: 50% 50% 50% 0;
-          transform: rotate(-45deg);
-          box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        "></div>
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        ">
+          <div style="
+            width: 20px;
+            height: 20px;
+            background: ${color};
+            border: 3px solid rgba(255,255,255,0.9);
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+          "></div>
+          <div style="
+            width: 2px;
+            height: 6px;
+            background: ${color};
+            opacity: 0.5;
+            margin-top: -1px;
+          "></div>
+        </div>
       `,
-      iconSize: [24, 24],
-      iconAnchor: [12, 24],
+      iconSize: [20, 28],
+      iconAnchor: [10, 28],
     });
   }
 

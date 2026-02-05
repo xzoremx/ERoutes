@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   MapPin,
@@ -117,18 +117,70 @@ export default function HomePage() {
     },
   ];
 
-  // Generar estaciones demo alrededor de la ubicación del usuario
-  const demoStations = useMemo((): MapMarkerModel[] => {
-    if (!userLocation) return [];
-    const { lat, lng } = userLocation;
-    return [
-      { id: "st-1", position: { lat: lat + 0.008, lng: lng - 0.005 }, title: "Grifo Repsol", label: "Av. Javier Prado 1230", priceText: "S/ 15.80", color: "#16a34a" },
-      { id: "st-2", position: { lat: lat - 0.006, lng: lng + 0.009 }, title: "Primax Express", label: "Av. Arequipa 890", priceText: "S/ 16.20", color: "#eab308" },
-      { id: "st-3", position: { lat: lat + 0.003, lng: lng + 0.012 }, title: "Petroperú", label: "Av. Brasil 456", priceText: "S/ 16.50", color: "#ef4444" },
-      { id: "st-4", position: { lat: lat - 0.010, lng: lng - 0.003 }, title: "Pecsa", label: "Av. Angamos 1567", priceText: "S/ 15.95", color: "#16a34a" },
-      { id: "st-5", position: { lat: lat + 0.005, lng: lng - 0.011 }, title: "Grifo Shell", label: "Av. Benavides 3420", priceText: "S/ 16.35", color: "#eab308" },
-    ];
-  }, [userLocation]);
+  // Estaciones obtenidas de la API
+  const [stations, setStations] = useState<MapMarkerModel[]>([]);
+  const [isLoadingStations, setIsLoadingStations] = useState(false);
+
+  // Fetch estaciones reales cuando se activa GPS
+  useEffect(() => {
+    if (!gpsActivated || !userLocation) return;
+
+    const fetchStations = async () => {
+      setIsLoadingStations(true);
+      try {
+        const origin = `${userLocation.lat},${userLocation.lng}`;
+        const res = await fetch(`/api/stations?origin=${origin}&radiusKm=15`);
+        const json = await res.json();
+
+        if (!json.success || !json.data?.length) {
+          setStations([]);
+          return;
+        }
+
+        // Extraer precios de GASOHOL_90 para determinar colores relativos
+        const prices = json.data
+          .map((s: { prices?: Record<string, { price: number }> }) => s.prices?.GASOHOL_90?.price)
+          .filter((p: number | undefined): p is number => p != null);
+        const minPrice = Math.min(...prices);
+        const maxPrice = Math.max(...prices);
+        const range = maxPrice - minPrice || 1;
+
+        const mapped: MapMarkerModel[] = json.data.map(
+          (s: { id: number; name: string; address: string; lat: number; lng: number; prices?: Record<string, { price: number }> }) => {
+            const price = s.prices?.GASOHOL_90?.price;
+            const priceText = price ? `S/ ${price.toFixed(2)}` : undefined;
+
+            // Color relativo: verde (bajo) → amarillo (medio) → rojo (alto)
+            let color = "#64748b"; // gris si no hay precio
+            if (price != null) {
+              const ratio = (price - minPrice) / range;
+              if (ratio <= 0.33) color = "#16a34a";      // verde
+              else if (ratio <= 0.66) color = "#ca8a04";  // amarillo oscuro
+              else color = "#dc2626";                      // rojo
+            }
+
+            return {
+              id: `st-${s.id}`,
+              position: { lat: s.lat, lng: s.lng },
+              title: s.name,
+              label: s.address,
+              priceText,
+              color,
+            };
+          }
+        );
+
+        setStations(mapped);
+      } catch (err) {
+        console.error("Error fetching stations:", err);
+        setStations([]);
+      } finally {
+        setIsLoadingStations(false);
+      }
+    };
+
+    fetchStations();
+  }, [gpsActivated, userLocation]);
 
   // Marcadores para el mapa según modo
   const mapMarkers = useMemo((): MapMarkerModel[] => {
@@ -137,19 +189,19 @@ export default function HomePage() {
     const userMarker: MapMarkerModel = {
       id: "user-location",
       position: userLocation,
-      title: "Tu ubicación",
-      label: "Estás aquí",
+      title: "Tu ubicaci\u00f3n",
+      label: "Est\u00e1s aqu\u00ed",
       color: "#3b82f6",
     };
 
-    // Modo enhanced: usuario + estaciones con precios
+    // Modo enhanced: usuario + estaciones reales
     if (gpsActivated) {
-      return [userMarker, ...demoStations];
+      return [userMarker, ...stations];
     }
 
-    // Modo básico: solo usuario
+    // Modo b\u00e1sico: solo usuario
     return [userMarker];
-  }, [userLocation, gpsActivated, demoStations]);
+  }, [userLocation, gpsActivated, stations]);
 
   return (
     <div className="antialiased min-h-screen overflow-x-hidden selection:bg-black selection:text-white text-slate-800 font-sans bg-[#ABCDE9] relative">
@@ -213,7 +265,11 @@ export default function HomePage() {
                       </div>
                       <div>
                         <h2 className="font-bold text-slate-900 font-nunito">Estaciones Cercanas</h2>
-                        <p className="text-sm text-slate-500">Precios de Gasohol 90</p>
+                        <p className="text-sm text-slate-500">
+                          {isLoadingStations
+                            ? "Buscando estaciones..."
+                            : `${stations.length} estaciones \u00b7 Gasohol 90`}
+                        </p>
                       </div>
                     </div>
                     <div className="hidden sm:flex items-center gap-4 text-sm">
