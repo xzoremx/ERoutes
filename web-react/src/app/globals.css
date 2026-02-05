@@ -238,8 +238,13 @@ body {
 }
 
 .pegman-control-ghost .pegman-button {
-  background-position: 2px -53px;
-  animation: pegman-drag-bob 0.45s ease-in-out infinite;
+  width: 30px;
+  height: 30px;
+  background-image: url("/assets/pegman/dangling-1x.png");
+  background-size: 30px 540px;
+  background-position: 0 0;
+  transform-origin: center;
+  animation: pegman-dangling 700ms steps(18) infinite, pegman-drag-bob 0.45s ease-in-out infinite;
 }
 
 .pegman-control-ghost.dir-left .pegman-button {
@@ -248,6 +253,16 @@ body {
 
 .pegman-control-ghost.dir-right .pegman-button {
   transform: scaleX(1);
+}
+
+@keyframes pegman-dangling {
+  from {
+    background-position: 0 0;
+  }
+
+  to {
+    background-position: 0 -540px;
+  }
 }
 
 /* Large map style for recommendations page */
