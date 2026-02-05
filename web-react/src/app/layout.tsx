@@ -1,10 +1,15 @@
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 import "./globals.css";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "ERoutes",
-  description: "Recomendación de estaciones de combustible en Perú"
+  description: "Recomendación de estaciones de combustible en Perú",
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
