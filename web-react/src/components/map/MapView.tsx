@@ -54,6 +54,16 @@ function MapViewInternal({ center, zoom, markers = [], onMapClick, className }: 
     shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
   });
 
+  // Componente para recentrar el mapa cuando cambia center/zoom
+  function RecenterMap({ center: c, zoom: z }: { center: LatLng; zoom: number }) {
+    const { useMap } = require("react-leaflet");
+    const map = useMap();
+    useEffect(() => {
+      map.flyTo([c.lat, c.lng], z, { duration: 1.5 });
+    }, [map, c.lat, c.lng, z]);
+    return null;
+  }
+
   // Componente para manejar clicks en el mapa
   function MapClickHandler() {
     useMapEvents({
@@ -122,6 +132,7 @@ function MapViewInternal({ center, zoom, markers = [], onMapClick, className }: 
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
+          <RecenterMap center={center} zoom={zoom} />
           <MapClickHandler />
           {markers.map((m) => (
             <Marker
