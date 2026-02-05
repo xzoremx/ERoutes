@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import dynamic from "next/dynamic";
 
 // Tipos para marcadores
@@ -23,23 +23,32 @@ export type MapViewProps = {
   zoom: number;
   markers?: MapMarkerModel[];
   onMapClick?: (latlng: LatLng) => void;
+  onPegmanDrop?: (latlng: LatLng) => void;
   className?: string;
 };
 
-// Componente estable para recentrar el mapa y manejar clicks
-// Definido fuera de MapViewInternal para tener identidad estable (no se recrea en cada render)
+// Componente estable para recentrar el mapa, manejar clicks, y exponer map ref
 function MapController({
   center,
   zoom,
   onMapClick,
+  mapRef,
 }: {
   center: LatLng;
   zoom: number;
   onMapClick?: (latlng: LatLng) => void;
+  mapRef?: React.MutableRefObject<unknown | null>;
 }) {
   const { useMap, useMapEvents } = require("react-leaflet");
   const map = useMap();
   const isFirstRender = useRef(true);
+
+  // Exponer instancia del mapa al padre via ref
+  useEffect(() => {
+    if (mapRef) {
+      mapRef.current = map;
+    }
+  }, [map, mapRef]);
 
   // Recentrar el mapa cuando cambia center/zoom (skip en mount inicial)
   useEffect(() => {
@@ -63,9 +72,14 @@ function MapController({
 }
 
 // Componente interno que usa Leaflet (solo se carga en cliente via dynamic)
-function MapViewInternal({ center, zoom, markers = [], onMapClick, className }: MapViewProps) {
+function MapViewInternal({ center, zoom, markers = [], onMapClick, onPegmanDrop, className }: MapViewProps) {
   const L = require("leaflet");
   const { MapContainer, TileLayer, Marker, Popup } = require("react-leaflet");
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mapRef = useRef<any>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
 
   // Fix para iconos de Leaflet en Next.js
   delete (L.Icon.Default.prototype as { _getIconUrl?: unknown })._getIconUrl;
@@ -74,6 +88,39 @@ function MapViewInternal({ center, zoom, markers = [], onMapClick, className }: 
     iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
     shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
   });
+
+  // --- Drag and Drop handlers ---
+  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    if (e.dataTransfer.types.includes("application/eroutes-pegman")) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+      setIsDragOver(true);
+    }
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    if (containerRef.current && !containerRef.current.contains(e.relatedTarget as Node)) {
+      setIsDragOver(false);
+    }
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragOver(false);
+
+    if (!e.dataTransfer.types.includes("application/eroutes-pegman")) return;
+    if (!mapRef.current || !onPegmanDrop) return;
+
+    const map = mapRef.current;
+    const mapContainer = map.getContainer();
+    const rect = mapContainer.getBoundingClientRect();
+
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    const latlng = map.containerPointToLatLng(L.point(x, y));
+    onPegmanDrop({ lat: latlng.lat, lng: latlng.lng });
+  }, [onPegmanDrop, L]);
 
   // Crear icono de precio estilo glass con puntero preciso
   function createPriceIcon(priceText: string, color: string = "#0f172a") {
@@ -157,7 +204,22 @@ function MapViewInternal({ center, zoom, markers = [], onMapClick, className }: 
   }
 
   return (
-    <div className={className}>
+    <div
+      ref={containerRef}
+      className={`${className || ""} relative ${isDragOver ? "ring-4 ring-blue-400/60 ring-inset" : ""} transition-shadow duration-200`}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      {/* Overlay visual durante drag */}
+      {isDragOver && (
+        <div className="absolute inset-0 z-[1000] flex items-center justify-center pointer-events-none">
+          <div className="bg-black/60 text-white px-6 py-3 rounded-full text-sm font-medium backdrop-blur-sm">
+            Soltar para fijar ubicación
+          </div>
+        </div>
+      )}
+
       <div className="h-[420px] w-full overflow-hidden rounded border border-slate-200">
         <MapContainer
           center={[center.lat, center.lng]}
@@ -169,7 +231,7 @@ function MapViewInternal({ center, zoom, markers = [], onMapClick, className }: 
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          <MapController center={center} zoom={zoom} onMapClick={onMapClick} />
+          <MapController center={center} zoom={zoom} onMapClick={onMapClick} mapRef={mapRef} />
           {markers.map((m) => (
             <Marker
               key={m.id}

@@ -113,6 +113,13 @@ export default function HomePage() {
     }
   }, []);
 
+  // Handler para drop del pegman en el mapa
+  const handlePegmanDrop = useCallback((latlng: LatLng) => {
+    setUserLocation(latlng);
+    setGpsActivated(true);
+    setGpsError(null);
+  }, []);
+
   // Handler para el botón primario
   const handlePrimaryClick = useCallback(() => {
     // Si estamos viendo el dashboard, cambiar a mapa
@@ -272,9 +279,9 @@ export default function HomePage() {
             secondaryCta={
               activeView === "map"
                 ? {
-                    text: "Dashboard",
-                    onClick: () => setActiveView("dashboard"),
-                  }
+                  text: "Dashboard",
+                  onClick: () => setActiveView("dashboard"),
+                }
                 : undefined
             }
           />
@@ -298,7 +305,7 @@ export default function HomePage() {
                   className="w-full bg-[#FDFBF9] rounded-[32px] shadow-2xl border border-white/60 overflow-hidden"
                   style={{ boxShadow: "0 50px 100px -20px rgba(50, 50, 93, 0.15), 0 30px 60px -30px rgba(0, 0, 0, 0.1)" }}
                 >
-                  <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-white/50 backdrop-blur-sm">
+                  <div className="flex items-center justify-between p-6 border-b border-white/40 bg-white/60 backdrop-blur-md">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-[#F6F4F0] rounded-lg">
                         <Fuel className="w-5 h-5 text-slate-700" />
@@ -331,6 +338,7 @@ export default function HomePage() {
                     center={userLocation || LIMA_CENTER}
                     zoom={14}
                     markers={mapMarkers}
+                    onPegmanDrop={handlePegmanDrop}
                     className="map-large"
                   />
                 </div>
@@ -340,6 +348,7 @@ export default function HomePage() {
                   center={userLocation || LIMA_CENTER}
                   zoom={userLocation ? 15 : 12}
                   markers={mapMarkers}
+                  onPegmanDrop={handlePegmanDrop}
                   className="map-large"
                 />
               )
