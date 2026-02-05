@@ -163,14 +163,21 @@ body {
   display: none;
 }
 
-/* Pegman drag ghost swing animation */
-@keyframes pegman-swing {
+/* Pegman pickup animation */
+@keyframes pegman-pickup {
   0% {
-    transform: rotate(-12deg);
+    transform: scale(0.2);
+    opacity: 0;
+  }
+
+  60% {
+    transform: scale(1.15);
+    opacity: 1;
   }
 
   100% {
-    transform: rotate(12deg);
+    transform: scale(1);
+    opacity: 1;
   }
 }
 
