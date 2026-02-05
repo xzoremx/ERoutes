@@ -233,6 +233,9 @@ export function PublicDashboard({
     const minTrendValue = allTrendValues.length ? Math.min(...allTrendValues) : 0;
     const maxTrendValue = allTrendValues.length ? Math.max(...allTrendValues) : 0;
     const rangeTrendValue = maxTrendValue - minTrendValue;
+    const yAxisTicks = allTrendValues.length
+        ? [maxTrendValue, maxTrendValue - (rangeTrendValue / 3), maxTrendValue - ((2 * rangeTrendValue) / 3), minTrendValue]
+        : [];
 
     const getBarHeight = (value: number | null) => {
         if (value == null) return 0;
@@ -357,44 +360,60 @@ export function PublicDashboard({
                     </div>
                 ) : (
                     <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
-                        <div className="flex items-center gap-4 text-xs font-medium text-slate-600 mb-4">
-                            {fuelMetadata.map((fuel) => (
-                                <div key={fuel.code} className="flex items-center gap-2">
-                                    <span className={`w-2.5 h-2.5 rounded-full ${fuel.dotClassName}`} />
-                                    <span>{fuel.label}</span>
-                                </div>
-                            ))}
+                        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                            <div className="flex items-center gap-4 text-xs font-medium text-slate-600">
+                                {fuelMetadata.map((fuel) => (
+                                    <div key={fuel.code} className="flex items-center gap-2">
+                                        <span className={`w-2.5 h-2.5 rounded-full ${fuel.dotClassName}`} />
+                                        <span>{fuel.label}</span>
+                                    </div>
+                                ))}
+                            </div>
+                            <span className="text-[11px] text-slate-400 font-medium">Unidad: S/ por litro</span>
                         </div>
 
-                        <div className="relative h-48 overflow-x-auto no-scrollbar">
-                            <div className="absolute inset-0 pointer-events-none flex flex-col justify-between pb-6">
-                                {[0, 1, 2, 3].map((line) => (
-                                    <div key={line} className="border-t border-dashed border-slate-200/80" />
+                        <div className="flex gap-3">
+                            <div className="h-48 w-14 shrink-0 pb-6 flex flex-col justify-between text-[10px] text-slate-400 text-right">
+                                {yAxisTicks.map((tickValue, index) => (
+                                    <span key={index} className="leading-none">
+                                        {toNumber(tickValue)?.toFixed(2)}
+                                    </span>
                                 ))}
                             </div>
 
-                            <div className="relative z-10 h-full flex items-end gap-3 min-w-max px-1">
-                                {chartBars.map((row) => (
-                                    <div key={row.month} className="h-full w-11 flex flex-col items-center justify-end">
-                                        <div className="w-full h-full flex items-end justify-center gap-1.5">
-                                            {row.values.map((item, index) => {
-                                                const metadata = fuelMetadata[index];
-
-                                                return (
-                                                    <div
-                                                        key={`${row.month}-${item.code}`}
-                                                        className={`w-3 rounded-t-md transition-all duration-500 ${metadata.barClassName}`}
-                                                        style={{ height: `${getBarHeight(item.value)}%` }}
-                                                        title={`${metadata.label}: ${item.value != null ? formatPrice(item.value) : "Sin dato"}`}
-                                                    />
-                                                );
-                                            })}
-                                        </div>
-                                        <span className="mt-2 text-[10px] font-medium uppercase tracking-wide text-slate-400">
-                                            {row.monthLabel}
-                                        </span>
+                            <div className="flex-1">
+                                <div className="relative h-48 overflow-x-auto no-scrollbar">
+                                    <div className="absolute inset-0 pointer-events-none flex flex-col justify-between pb-6">
+                                        {[0, 1, 2, 3].map((line) => (
+                                            <div key={line} className="border-t border-dashed border-slate-200/80" />
+                                        ))}
                                     </div>
-                                ))}
+
+                                    <div className="relative z-10 h-full flex items-end gap-3 min-w-max px-1">
+                                        {chartBars.map((row) => (
+                                            <div key={row.month} className="h-full w-11 flex flex-col items-center justify-end">
+                                                <div className="w-full h-full flex items-end justify-center gap-1.5">
+                                                    {row.values.map((item, index) => {
+                                                        const metadata = fuelMetadata[index];
+
+                                                        return (
+                                                            <div
+                                                                key={`${row.month}-${item.code}`}
+                                                                className={`w-3 rounded-t-md transition-all duration-500 ${metadata.barClassName}`}
+                                                                style={{ height: `${getBarHeight(item.value)}%` }}
+                                                                title={`${metadata.label}: ${item.value != null ? formatPrice(item.value) : "Sin dato"}`}
+                                                            />
+                                                        );
+                                                    })}
+                                                </div>
+                                                <span className="mt-2 text-[10px] font-medium uppercase tracking-wide text-slate-400">
+                                                    {row.monthLabel}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="pt-1 text-[10px] text-slate-400 text-center uppercase tracking-widest">Mes</div>
                             </div>
                         </div>
                     </div>
