@@ -163,6 +163,17 @@ body {
   display: none;
 }
 
+/* Pegman drag ghost swing animation */
+@keyframes pegman-swing {
+  0% {
+    transform: rotate(-12deg);
+  }
+
+  100% {
+    transform: rotate(12deg);
+  }
+}
+
 /* Large map style for recommendations page */
 .map-large>div {
   height: 600px !important;
