@@ -13,34 +13,27 @@ interface NavbarProps {
     links?: NavLink[];
 }
 
-// SVG del pegman con articulaciones (cada <g data-j> es un joint)
+// Pegman estilo traffic sign — silueta sólida, sin cara ni ropa
+// Brazo izquierdo dibujado arriba (levantado = "lo estamos sosteniendo")
 const PEGMAN_SVG = `
 <svg width="44" height="60" viewBox="0 0 44 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <ellipse cx="22" cy="58" rx="8" ry="2.5" fill="rgba(0,0,0,0.10)"/>
-  <g data-j="body" style="transform-origin: 22px 14px;">
-    <g data-j="leg-l" style="transform-origin: 18px 34px;">
-      <line x1="18" y1="34" x2="13" y2="50" stroke="#92400e" stroke-width="3.5" stroke-linecap="round"/>
-      <circle cx="13" cy="50" r="2" fill="#78350f"/>
+  <ellipse cx="22" cy="57" rx="7" ry="2" fill="rgba(0,0,0,0.10)"/>
+  <g data-j="body" style="transform-origin: 22px 16px;">
+    <g data-j="leg-l" style="transform-origin: 22px 36px;">
+      <line x1="22" y1="36" x2="14" y2="52" stroke="#d97706" stroke-width="4" stroke-linecap="round"/>
     </g>
-    <g data-j="leg-r" style="transform-origin: 26px 34px;">
-      <line x1="26" y1="34" x2="31" y2="50" stroke="#92400e" stroke-width="3.5" stroke-linecap="round"/>
-      <circle cx="31" cy="50" r="2" fill="#78350f"/>
+    <g data-j="leg-r" style="transform-origin: 22px 36px;">
+      <line x1="22" y1="36" x2="30" y2="52" stroke="#d97706" stroke-width="4" stroke-linecap="round"/>
     </g>
-    <rect x="15" y="19" width="14" height="16" rx="4" fill="#f59e0b"/>
-    <g data-j="arm-l" style="transform-origin: 15px 21px;">
-      <line x1="15" y1="21" x2="6" y2="34" stroke="#fbbf24" stroke-width="3.5" stroke-linecap="round"/>
-      <circle cx="6" cy="34" r="1.8" fill="#f59e0b"/>
+    <line x1="22" y1="18" x2="22" y2="36" stroke="#d97706" stroke-width="4" stroke-linecap="round"/>
+    <g data-j="arm-l" style="transform-origin: 22px 23px;">
+      <line x1="22" y1="23" x2="14" y2="13" stroke="#d97706" stroke-width="4" stroke-linecap="round"/>
     </g>
-    <g data-j="arm-r" style="transform-origin: 29px 21px;">
-      <line x1="29" y1="21" x2="38" y2="34" stroke="#fbbf24" stroke-width="3.5" stroke-linecap="round"/>
-      <circle cx="38" cy="34" r="1.8" fill="#f59e0b"/>
+    <g data-j="arm-r" style="transform-origin: 22px 23px;">
+      <line x1="22" y1="23" x2="32" y2="33" stroke="#d97706" stroke-width="4" stroke-linecap="round"/>
     </g>
-    <g data-j="head" style="transform-origin: 22px 17px;">
-      <circle cx="22" cy="10" r="8" fill="#fbbf24"/>
-      <circle cx="22" cy="10" r="8" fill="none" stroke="#f59e0b" stroke-width="0.8"/>
-      <circle cx="19" cy="9" r="1.3" fill="#78350f"/>
-      <circle cx="25" cy="9" r="1.3" fill="#78350f"/>
-      <path d="M19.5 13 Q22 15.5 24.5 13" stroke="#78350f" stroke-width="0.9" fill="none" stroke-linecap="round"/>
+    <g data-j="head" style="transform-origin: 22px 16px;">
+      <circle cx="22" cy="10" r="7" fill="#d97706"/>
     </g>
   </g>
 </svg>`;
@@ -62,7 +55,6 @@ export function Navbar({
         e.preventDefault();
         setIsDragging(true);
 
-        // Crear ghost
         const ghost = document.createElement("div");
         ghost.style.cssText = `
             position: fixed;
@@ -94,35 +86,36 @@ export function Navbar({
         };
 
         let walkPhase = 0;
-        let smoothVx = 0;       // smoothed horizontal velocity for legs
+        let smoothVx = 0;
         let lastX = e.clientX;
         let lastY = e.clientY;
         let rafId: number;
 
         const physicsLoop = () => {
-            // ── Body: main pendulum driven by mouse impulse ──
+            // ── Body: main pendulum ──
             j.body.vel += -j.body.angle * 0.06;
             j.body.vel *= 0.88;
             j.body.angle = clamp(j.body.angle + j.body.vel, -45, 45);
 
-            // ── Head: whiplash — counter-rotates vs body with delay ──
+            // ── Head: whiplash counter-rotation ──
             j.head.vel += (-j.body.vel * 0.5 - j.head.angle * 0.10);
             j.head.vel *= 0.72;
             j.head.angle = clamp(j.head.angle + j.head.vel, -25, 25);
 
-            // ── Arms: loose pendulums, react to body velocity ──
-            j.armL.vel += (j.body.vel * 2.2 - j.armL.angle * 0.04);
-            j.armL.vel *= 0.80;
-            j.armL.angle = clamp(j.armL.angle + j.armL.vel, -65, 65);
+            // ── Left arm: raised — stiff spring, small wiggles only ──
+            j.armL.vel += (-j.body.vel * 0.3 - j.armL.angle * 0.15);
+            j.armL.vel *= 0.78;
+            j.armL.angle = clamp(j.armL.angle + j.armL.vel, -15, 20);
 
+            // ── Right arm: loose pendulum ──
             j.armR.vel += (-j.body.vel * 2.2 - j.armR.angle * 0.04);
             j.armR.vel *= 0.80;
             j.armR.angle = clamp(j.armR.angle + j.armR.vel, -65, 65);
 
-            // ── Legs: walking cycle driven by movement speed ──
+            // ── Legs: walking cycle ──
             const speed = Math.abs(smoothVx);
-            walkPhase += speed * 0.15 + 0.02; // base idle sway + speed-driven walk
-            const walkAmp = clamp(speed * 10, 3, 30); // min 3° idle sway
+            walkPhase += speed * 0.15 + 0.02;
+            const walkAmp = clamp(speed * 10, 3, 30);
             const walkTarget = Math.sin(walkPhase) * walkAmp;
 
             j.legL.vel += (walkTarget - j.legL.angle) * 0.18;
@@ -140,25 +133,17 @@ export function Navbar({
                 }
             }
 
-            // Decay smoothed velocity when mouse isn't moving
             smoothVx *= 0.90;
-
             rafId = requestAnimationFrame(physicsLoop);
         };
         rafId = requestAnimationFrame(physicsLoop);
 
-        // ── Mouse handlers ──
         const onMouseMove = (ev: MouseEvent) => {
             const dx = ev.clientX - lastX;
             const dy = ev.clientY - lastY;
 
-            // Smoothed velocity for legs walk cycle
             smoothVx = smoothVx * 0.5 + dx * 0.5;
-
-            // Impulse: mouse dx adds angular velocity to body
             j.body.vel += dx * 0.5;
-
-            // Vertical movement also creates slight body tilt (subtle)
             j.body.vel += dy * 0.08;
 
             lastX = ev.clientX;
@@ -217,11 +202,11 @@ export function Navbar({
                     </a>
                 ))}
 
-                {/* Pegman: icono arrastrable con skeleton physics */}
+                {/* Pegman: hover sway + drag con skeleton physics */}
                 <div
                     onMouseDown={handleMouseDown}
-                    className={`cursor-grab select-none transition-all duration-200 ${
-                        isDragging ? "opacity-30 scale-75" : "opacity-70 hover:opacity-100"
+                    className={`select-none transition-opacity duration-200 ${
+                        isDragging ? "opacity-30" : "pegman-icon cursor-grab"
                     }`}
                     title="Arrastra al mapa"
                 >

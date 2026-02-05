@@ -181,6 +181,27 @@ body {
   }
 }
 
+/* Pegman hover: sway side-to-side, ready to be grabbed */
+@keyframes pegman-ready {
+
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+
+  25% {
+    transform: translateY(-3px) rotate(-6deg);
+  }
+
+  75% {
+    transform: translateY(-3px) rotate(6deg);
+  }
+}
+
+.pegman-icon:hover {
+  animation: pegman-ready 0.6s ease-in-out infinite;
+}
+
 /* Large map style for recommendations page */
 .map-large>div {
   height: 600px !important;

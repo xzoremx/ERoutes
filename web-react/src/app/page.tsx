@@ -302,13 +302,13 @@ export default function HomePage() {
               gpsActivated ? (
                 /* Modo Enhanced: mapa con header, leyenda y estaciones */
                 <div
-                  className="w-full rounded-[32px] shadow-2xl border border-white/60 overflow-hidden relative"
+                  className="w-full rounded-[32px] shadow-2xl border border-white/60 overflow-hidden"
                   style={{ boxShadow: "0 50px 100px -20px rgba(50, 50, 93, 0.15), 0 30px 60px -30px rgba(0, 0, 0, 0.1)" }}
                 >
-                  {/* Header flotante con efecto glass */}
-                  <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4 md:p-6 bg-white/70 backdrop-blur-xl border-b border-white/50 rounded-t-[32px]">
+                  {/* Header con estilo glass */}
+                  <div className="flex items-center justify-between p-4 md:p-6 bg-gradient-to-b from-white/90 via-white/80 to-white/70 backdrop-blur-sm border-b border-white/50">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 bg-white/80 rounded-lg shadow-sm">
+                      <div className="p-2 bg-white/60 backdrop-blur-sm rounded-xl shadow-sm border border-white/40">
                         <Fuel className="w-5 h-5 text-slate-700" />
                       </div>
                       <div>
