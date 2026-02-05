@@ -89,37 +89,47 @@ function MapViewInternal({ center, zoom, markers = [], onMapClick, onPegmanDrop,
     shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
   });
 
-  // --- Drag and Drop handlers ---
-  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    if (e.dataTransfer.types.includes("application/eroutes-pegman")) {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = "move";
-      setIsDragOver(true);
-    }
-  }, []);
+  // --- Pegman drag via custom events (mouse tracking, not HTML5 DnD) ---
+  useEffect(() => {
+    if (!onPegmanDrop) return;
+    const container = containerRef.current;
+    if (!container) return;
 
-  const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    if (containerRef.current && !containerRef.current.contains(e.relatedTarget as Node)) {
+    const isOverMap = (clientX: number, clientY: number) => {
+      const rect = container.getBoundingClientRect();
+      return clientX >= rect.left && clientX <= rect.right &&
+             clientY >= rect.top && clientY <= rect.bottom;
+    };
+
+    const onDragMove = (e: Event) => {
+      const { clientX, clientY } = (e as CustomEvent).detail;
+      setIsDragOver(isOverMap(clientX, clientY));
+    };
+
+    const onDragEnd = (e: Event) => {
+      const { clientX, clientY } = (e as CustomEvent).detail;
       setIsDragOver(false);
-    }
-  }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setIsDragOver(false);
+      if (!isOverMap(clientX, clientY)) return;
+      if (!mapRef.current) return;
 
-    if (!e.dataTransfer.types.includes("application/eroutes-pegman")) return;
-    if (!mapRef.current || !onPegmanDrop) return;
+      const map = mapRef.current;
+      const mapContainer = map.getContainer();
+      const rect = mapContainer.getBoundingClientRect();
+      const x = clientX - rect.left;
+      const y = clientY - rect.top;
 
-    const map = mapRef.current;
-    const mapContainer = map.getContainer();
-    const rect = mapContainer.getBoundingClientRect();
+      const latlng = map.containerPointToLatLng(L.point(x, y));
+      onPegmanDrop({ lat: latlng.lat, lng: latlng.lng });
+    };
 
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    document.addEventListener("eroutes:pegman-drag-move", onDragMove);
+    document.addEventListener("eroutes:pegman-drag-end", onDragEnd);
 
-    const latlng = map.containerPointToLatLng(L.point(x, y));
-    onPegmanDrop({ lat: latlng.lat, lng: latlng.lng });
+    return () => {
+      document.removeEventListener("eroutes:pegman-drag-move", onDragMove);
+      document.removeEventListener("eroutes:pegman-drag-end", onDragEnd);
+    };
   }, [onPegmanDrop, L]);
 
   // Crear icono de precio estilo glass con puntero preciso
@@ -207,9 +217,6 @@ function MapViewInternal({ center, zoom, markers = [], onMapClick, onPegmanDrop,
     <div
       ref={containerRef}
       className={`${className || ""} relative ${isDragOver ? "ring-4 ring-blue-400/60 ring-inset" : ""} transition-shadow duration-200`}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
     >
       {/* Overlay visual durante drag */}
       {isDragOver && (

@@ -20,32 +20,66 @@ export function Navbar({
     ],
 }: NavbarProps) {
     const [isDragging, setIsDragging] = useState(false);
-    const pegmanRef = useRef<HTMLDivElement>(null);
     const ghostRef = useRef<HTMLDivElement | null>(null);
 
-    const handleDragStart = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-        e.dataTransfer.setData("application/eroutes-pegman", "1");
-        e.dataTransfer.effectAllowed = "move";
+    const handleMouseDown = useCallback((e: React.MouseEvent) => {
+        e.preventDefault();
         setIsDragging(true);
 
-        // Crear ghost personalizado: pegman balanceándose
+        // Crear ghost animado que sigue al cursor (DOM real, no drag image)
         const ghost = document.createElement("div");
-        ghost.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1"/><path d="m9 20 3-6 3 6"/><path d="m6 8 6 2 6-2"/><path d="M12 10v4"/></svg>`;
-        ghost.style.cssText = "position:fixed;top:-100px;left:-100px;pointer-events:none;animation:pegman-swing 0.4s ease-in-out infinite alternate;transform-origin:top center;";
+        ghost.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1"/><path d="m9 20 3-6 3 6"/><path d="m6 8 6 2 6-2"/><path d="M12 10v4"/></svg>`;
+        ghost.style.cssText = `
+            position: fixed;
+            z-index: 99999;
+            pointer-events: none;
+            transform-origin: top center;
+            animation: pegman-swing 0.3s ease-in-out infinite alternate;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.25));
+            left: ${e.clientX - 18}px;
+            top: ${e.clientY - 18}px;
+        `;
         document.body.appendChild(ghost);
         ghostRef.current = ghost;
 
-        e.dataTransfer.setDragImage(ghost, 16, 16);
+        // Cursor global grabbing
+        document.body.style.cursor = "grabbing";
+        document.body.style.userSelect = "none";
 
-        // Limpiar ghost después de que el browser lo capture
-        requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-                if (ghostRef.current) {
-                    document.body.removeChild(ghostRef.current);
-                    ghostRef.current = null;
-                }
-            });
-        });
+        // Notificar inicio
+        document.dispatchEvent(new CustomEvent("eroutes:pegman-drag-start"));
+
+        const onMouseMove = (ev: MouseEvent) => {
+            if (ghostRef.current) {
+                ghostRef.current.style.left = `${ev.clientX - 18}px`;
+                ghostRef.current.style.top = `${ev.clientY - 18}px`;
+            }
+            document.dispatchEvent(new CustomEvent("eroutes:pegman-drag-move", {
+                detail: { clientX: ev.clientX, clientY: ev.clientY },
+            }));
+        };
+
+        const onMouseUp = (ev: MouseEvent) => {
+            // Notificar drop
+            document.dispatchEvent(new CustomEvent("eroutes:pegman-drag-end", {
+                detail: { clientX: ev.clientX, clientY: ev.clientY },
+            }));
+
+            // Limpiar ghost
+            if (ghostRef.current) {
+                document.body.removeChild(ghostRef.current);
+                ghostRef.current = null;
+            }
+            setIsDragging(false);
+            document.body.style.cursor = "";
+            document.body.style.userSelect = "";
+
+            document.removeEventListener("mousemove", onMouseMove);
+            document.removeEventListener("mouseup", onMouseUp);
+        };
+
+        document.addEventListener("mousemove", onMouseMove);
+        document.addEventListener("mouseup", onMouseUp);
     }, []);
 
     return (
@@ -69,16 +103,12 @@ export function Navbar({
                     </a>
                 ))}
 
-                {/* Pegman: icono libre draggable */}
+                {/* Pegman: icono arrastrable con mouse tracking */}
                 <div
-                    ref={pegmanRef}
-                    draggable
-                    onDragStart={handleDragStart}
-                    onDragEnd={() => setIsDragging(false)}
-                    className={`cursor-grab active:cursor-grabbing select-none transition-all duration-150 ${
-                        isDragging ? "opacity-0" : "opacity-70 hover:opacity-100"
+                    onMouseDown={handleMouseDown}
+                    className={`cursor-grab select-none transition-all duration-150 ${
+                        isDragging ? "opacity-30 scale-90" : "opacity-70 hover:opacity-100"
                     }`}
-                    style={{ transformOrigin: "top center" }}
                     title="Arrastra al mapa"
                 >
                     <PersonStanding
