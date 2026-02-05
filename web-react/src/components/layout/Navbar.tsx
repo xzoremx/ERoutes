@@ -13,8 +13,7 @@ interface NavbarProps {
 export function Navbar({
     brandName = "ERoutes",
     links = [
-        { href: "#", label: "Características" },
-        { href: "#", label: "Contacto" },
+        { href: "#footer", label: "Contacto" },
     ],
 }: NavbarProps) {
     return (

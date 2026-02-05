@@ -13,35 +13,31 @@ interface FooterProps {
     brandDescription?: string;
     columns?: FooterColumn[];
     copyright?: string;
-    madeWith?: string;
 }
 
 export function Footer({
     brandName = "ERoutes",
-    brandDescription = "Your favourite business management software. Built for early startup founders.",
+    brandDescription = "Tu aplicación de confianza para encontrar las estaciones de servicio más cercanas y económicas.",
     columns = [
         {
-            title: "Product",
+            title: "Producto",
             links: [
-                { href: "#", label: "Features" },
-                { href: "#", label: "Pricing" },
-                { href: "#", label: "Blog" },
+                { href: "#", label: "Características" },
             ],
         },
         {
-            title: "Information",
+            title: "Información",
             links: [
-                { href: "#", label: "Contact" },
-                { href: "#", label: "Terms of use" },
-                { href: "#", label: "Privacy" },
+                { href: "mailto:renato.huamani@pucp.edu.pe", label: "Contacto" },
+                { href: "/terminos", label: "Términos de uso" },
+                { href: "/privacidad", label: "Privacidad" },
             ],
         },
     ],
-    copyright = "© 2026 OnePro. Created by",
-    madeWith = "Aura Builder",
+    copyright = "© 2026 ERoutes. Created by",
 }: FooterProps) {
     return (
-        <section className="overflow-hidden bg-[#F6F4F0] w-full z-10 border-white/40 border-t pt-32 pb-0 relative">
+        <section id="footer" className="overflow-hidden bg-[#F6F4F0] w-full z-10 border-white/40 border-t pt-32 pb-0 relative">
             <div className="max-w-7xl mx-auto px-6">
                 <footer className="w-full max-w-7xl z-10 mx-auto pt-12 pr-6 pb-12 pl-6 relative">
                     <div className="bg-[#D3E4F4] rounded-[40px] p-8 md:p-12 lg:p-16 shadow-sm border border-white/20">
@@ -88,12 +84,8 @@ export function Footer({
                             <div>
                                 {copyright}{" "}
                                 <span className="font-semibold text-slate-900">
-                                    François Savard
+                                    zorem
                                 </span>
-                            </div>
-                            <div>
-                                Made with{" "}
-                                <span className="font-semibold text-slate-900">{madeWith}</span>
                             </div>
                         </div>
                     </div>
