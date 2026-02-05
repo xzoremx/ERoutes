@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import { Fuel, PersonStanding } from "lucide-react";
+import { Fuel } from "lucide-react";
 
 interface NavLink {
     href: string;
@@ -13,27 +13,35 @@ interface NavbarProps {
     links?: NavLink[];
 }
 
-// Pegman estilo traffic sign — silueta sólida, sin cara ni ropa
-// Brazo izquierdo dibujado arriba (levantado = "lo estamos sosteniendo")
+const PEGMAN_WIDTH = 28;
+const PEGMAN_HEIGHT = 38;
+
+// Pegman con silueta inspirada en Google Maps.
+// Base neutra; durante drag se eleva el brazo derecho.
 const PEGMAN_SVG = `
-<svg width="44" height="60" viewBox="0 0 44 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <ellipse cx="22" cy="57" rx="7" ry="2" fill="rgba(0,0,0,0.10)"/>
-  <g data-j="body" style="transform-origin: 22px 16px;">
-    <g data-j="leg-l" style="transform-origin: 22px 36px;">
-      <line x1="22" y1="36" x2="14" y2="52" stroke="#d97706" stroke-width="4" stroke-linecap="round"/>
+<svg width="${PEGMAN_WIDTH}" height="${PEGMAN_HEIGHT}" viewBox="0 0 28 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <ellipse cx="14" cy="35.5" rx="6.5" ry="1.8" fill="rgba(0,0,0,0.14)"/>
+  <g data-j="body" style="transform-origin: 14px 16px; transform-box: fill-box;">
+    <g data-j="leg-l" style="transform-origin: 14px 24px; transform-box: fill-box;">
+      <line x1="14" y1="24" x2="9.5" y2="33" stroke="#d08700" stroke-width="3.2" stroke-linecap="round"/>
     </g>
-    <g data-j="leg-r" style="transform-origin: 22px 36px;">
-      <line x1="22" y1="36" x2="30" y2="52" stroke="#d97706" stroke-width="4" stroke-linecap="round"/>
+    <g data-j="leg-r" style="transform-origin: 14px 24px; transform-box: fill-box;">
+      <line x1="14" y1="24" x2="18.5" y2="33" stroke="#d08700" stroke-width="3.2" stroke-linecap="round"/>
     </g>
-    <line x1="22" y1="18" x2="22" y2="36" stroke="#d97706" stroke-width="4" stroke-linecap="round"/>
-    <g data-j="arm-l" style="transform-origin: 22px 23px;">
-      <line x1="22" y1="23" x2="14" y2="13" stroke="#d97706" stroke-width="4" stroke-linecap="round"/>
+    <ellipse cx="9.3" cy="33.4" rx="2.1" ry="1" fill="#b46a00"/>
+    <ellipse cx="18.7" cy="33.4" rx="2.1" ry="1" fill="#b46a00"/>
+    <g data-j="arm-l" style="transform-origin: 14px 16px; transform-box: fill-box;">
+      <line x1="14" y1="16" x2="8" y2="22" stroke="#d08700" stroke-width="3.2" stroke-linecap="round"/>
     </g>
-    <g data-j="arm-r" style="transform-origin: 22px 23px;">
-      <line x1="22" y1="23" x2="32" y2="33" stroke="#d97706" stroke-width="4" stroke-linecap="round"/>
+    <g data-j="arm-r" style="transform-origin: 14px 16px; transform-box: fill-box;">
+      <line x1="14" y1="16" x2="20" y2="22" stroke="#d08700" stroke-width="3.2" stroke-linecap="round"/>
     </g>
-    <g data-j="head" style="transform-origin: 22px 16px;">
-      <circle cx="22" cy="10" r="7" fill="#d97706"/>
+    <rect x="10" y="13.2" width="8" height="11.2" rx="4.2" fill="#fbbc04" stroke="#d08700" stroke-width="1"/>
+    <g data-j="head" style="transform-origin: 14px 8px; transform-box: fill-box;">
+      <circle cx="14" cy="8" r="5.3" fill="#fbbc04" stroke="#d08700" stroke-width="1"/>
+      <rect x="10.7" y="6.2" width="6.6" height="2.5" rx="1.2" fill="#8f5a00"/>
+      <circle cx="12.2" cy="7.5" r="0.6" fill="#fdf7e3"/>
+      <circle cx="15.8" cy="7.5" r="0.6" fill="#fdf7e3"/>
     </g>
   </g>
 </svg>`;
@@ -49,23 +57,33 @@ export function Navbar({
     ],
 }: NavbarProps) {
     const [isDragging, setIsDragging] = useState(false);
+    const pegmanRef = useRef<HTMLSpanElement | null>(null);
     const ghostRef = useRef<HTMLDivElement | null>(null);
 
     const handleMouseDown = useCallback((e: React.MouseEvent) => {
         e.preventDefault();
+        const pegmanIcon = pegmanRef.current;
+        if (!pegmanIcon) return;
+
         setIsDragging(true);
 
+        const sourceRect = pegmanIcon.getBoundingClientRect();
+        const grabOffsetX = clamp(e.clientX - sourceRect.left, 0, sourceRect.width);
+        const grabOffsetY = clamp(e.clientY - sourceRect.top, 0, sourceRect.height);
+
         const ghost = document.createElement("div");
+        ghost.innerHTML = pegmanIcon.innerHTML;
         ghost.style.cssText = `
             position: fixed;
             z-index: 99999;
             pointer-events: none;
+            width: ${sourceRect.width}px;
+            height: ${sourceRect.height}px;
             filter: drop-shadow(0 6px 14px rgba(0,0,0,0.3));
-            left: ${e.clientX - 22}px;
-            top: ${e.clientY - 10}px;
+            left: ${e.clientX - grabOffsetX}px;
+            top: ${e.clientY - grabOffsetY}px;
             animation: pegman-pickup 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
         `;
-        ghost.innerHTML = PEGMAN_SVG;
         document.body.appendChild(ghost);
         ghostRef.current = ghost;
 
@@ -80,7 +98,7 @@ export function Navbar({
             body:  { el: q("body"),  angle: 0, vel: 0 },
             head:  { el: q("head"),  angle: 0, vel: 0 },
             armL:  { el: q("arm-l"), angle: 0, vel: 0 },
-            armR:  { el: q("arm-r"), angle: 0, vel: 0 },
+            armR:  { el: q("arm-r"), angle: -42, vel: 0 },
             legL:  { el: q("leg-l"), angle: 0, vel: 0 },
             legR:  { el: q("leg-r"), angle: 0, vel: 0 },
         };
@@ -93,29 +111,31 @@ export function Navbar({
 
         const physicsLoop = () => {
             // ── Body: main pendulum ──
-            j.body.vel += -j.body.angle * 0.06;
-            j.body.vel *= 0.88;
-            j.body.angle = clamp(j.body.angle + j.body.vel, -45, 45);
+            j.body.vel += -j.body.angle * 0.07;
+            j.body.vel *= 0.86;
+            j.body.angle = clamp(j.body.angle + j.body.vel, -32, 32);
 
             // ── Head: whiplash counter-rotation ──
-            j.head.vel += (-j.body.vel * 0.5 - j.head.angle * 0.10);
-            j.head.vel *= 0.72;
-            j.head.angle = clamp(j.head.angle + j.head.vel, -25, 25);
+            const headTarget = -j.body.angle * 0.30;
+            j.head.vel += (headTarget - j.head.angle) * 0.20;
+            j.head.vel *= 0.70;
+            j.head.angle = clamp(j.head.angle + j.head.vel, -18, 18);
 
-            // ── Left arm: raised — stiff spring, small wiggles only ──
-            j.armL.vel += (-j.body.vel * 0.3 - j.armL.angle * 0.15);
-            j.armL.vel *= 0.78;
-            j.armL.angle = clamp(j.armL.angle + j.armL.vel, -15, 20);
+            // ── Right arm: raised while dragging ──
+            const rightArmTarget = -48 - j.body.angle * 0.2;
+            j.armR.vel += (rightArmTarget - j.armR.angle) * 0.20;
+            j.armR.vel *= 0.74;
+            j.armR.angle = clamp(j.armR.angle + j.armR.vel, -78, -16);
 
-            // ── Right arm: loose pendulum ──
-            j.armR.vel += (-j.body.vel * 2.2 - j.armR.angle * 0.04);
-            j.armR.vel *= 0.80;
-            j.armR.angle = clamp(j.armR.angle + j.armR.vel, -65, 65);
+            // ── Left arm: loose pendulum ──
+            j.armL.vel += (-j.body.vel * 1.8 - j.armL.angle * 0.06);
+            j.armL.vel *= 0.80;
+            j.armL.angle = clamp(j.armL.angle + j.armL.vel, -60, 60);
 
             // ── Legs: walking cycle ──
             const speed = Math.abs(smoothVx);
             walkPhase += speed * 0.15 + 0.02;
-            const walkAmp = clamp(speed * 10, 3, 30);
+            const walkAmp = clamp(speed * 7, 3, 22);
             const walkTarget = Math.sin(walkPhase) * walkAmp;
 
             j.legL.vel += (walkTarget - j.legL.angle) * 0.18;
@@ -150,8 +170,8 @@ export function Navbar({
             lastY = ev.clientY;
 
             if (ghostRef.current) {
-                ghostRef.current.style.left = `${ev.clientX - 22}px`;
-                ghostRef.current.style.top = `${ev.clientY - 10}px`;
+                ghostRef.current.style.left = `${ev.clientX - grabOffsetX}px`;
+                ghostRef.current.style.top = `${ev.clientY - grabOffsetY}px`;
             }
 
             document.dispatchEvent(new CustomEvent("eroutes:pegman-drag-move", {
@@ -203,18 +223,23 @@ export function Navbar({
                 ))}
 
                 {/* Pegman: hover sway + drag con skeleton physics */}
-                <div
+                <button
+                    type="button"
                     onMouseDown={handleMouseDown}
-                    className={`select-none transition-opacity duration-200 ${
-                        isDragging ? "opacity-30" : "pegman-icon cursor-grab"
+                    className={`select-none appearance-none bg-transparent border-0 p-0 leading-none transition-opacity duration-200 ${
+                        isDragging ? "opacity-30" : "pegman-icon cursor-grab active:cursor-grabbing"
                     }`}
                     title="Arrastra al mapa"
+                    aria-label="Arrastra pegman al mapa"
+                    style={{ width: `${PEGMAN_WIDTH}px`, height: `${PEGMAN_HEIGHT}px` }}
                 >
-                    <PersonStanding
-                        className="w-6 h-6 text-amber-600 drop-shadow-sm"
-                        strokeWidth={2.5}
+                    <span
+                        ref={pegmanRef}
+                        className="block leading-none"
+                        style={{ width: `${PEGMAN_WIDTH}px`, height: `${PEGMAN_HEIGHT}px` }}
+                        dangerouslySetInnerHTML={{ __html: PEGMAN_SVG }}
                     />
-                </div>
+                </button>
             </div>
         </nav>
     );
