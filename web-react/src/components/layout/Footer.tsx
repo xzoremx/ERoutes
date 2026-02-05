@@ -1,3 +1,5 @@
+import { Fuel } from "lucide-react";
+
 interface FooterLink {
     href: string;
     label: string;
@@ -45,7 +47,7 @@ export function Footer({
                             {/* Brand Section */}
                             <div className="max-w-sm">
                                 <div className="flex items-center gap-2 mb-6">
-                                    <div className="w-6 h-6 bg-[#1A1A1A] rounded-tr-md rounded-bl-md"></div>
+                                    <Fuel className="w-6 h-6 text-slate-900" />
                                     <span className="text-xl font-semibold text-[#1A1A1A] tracking-tight font-nunito">
                                         {brandName}
                                     </span>
