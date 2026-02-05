@@ -16,6 +16,7 @@ import { HeroSection, FeaturesSection } from "@/components/sections";
 
 // Dashboard Components
 import { PublicDashboard } from "@/components/dashboard";
+import type { PublicDashboardProps } from "@/components/dashboard/PublicDashboard";
 
 // Map Components
 import { MapView, LatLng, MapMarkerModel } from "@/components/map/MapView";
@@ -32,6 +33,45 @@ export default function HomePage() {
   const [userLocation, setUserLocation] = useState<LatLng | null>(null);
   const [isLoadingGps, setIsLoadingGps] = useState(false);
   const [gpsError, setGpsError] = useState<string | null>(null);
+
+  // Pre-fetch de stats y tendencias del dashboard al cargar la página
+  const [dashboardStats, setDashboardStats] = useState<PublicDashboardProps["stats"]>(null);
+  const [dashboardLoading, setDashboardLoading] = useState(true);
+  const [dashboardError, setDashboardError] = useState<string | null>(null);
+  const [dashboardTrends, setDashboardTrends] = useState<PublicDashboardProps["trends"]>(null);
+  const [dashboardTrendsLoading, setDashboardTrendsLoading] = useState(true);
+  const [dashboardTrendsError, setDashboardTrendsError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function prefetchDashboardData() {
+      setDashboardLoading(true);
+      setDashboardTrendsLoading(true);
+
+      const [statsResult, trendsResult] = await Promise.allSettled([
+        fetch("/api/stats").then((response) => response.json()),
+        fetch("/api/prices-trends").then((response) => response.json()),
+      ]);
+
+      if (statsResult.status === "fulfilled" && statsResult.value?.success) {
+        setDashboardStats(statsResult.value.data);
+        setDashboardError(null);
+      } else {
+        setDashboardError("No se pudieron cargar las estadísticas");
+      }
+
+      if (trendsResult.status === "fulfilled" && trendsResult.value?.success) {
+        setDashboardTrends(trendsResult.value.data);
+        setDashboardTrendsError(null);
+      } else {
+        setDashboardTrendsError("No se pudo cargar la evolución de precios");
+      }
+
+      setDashboardLoading(false);
+      setDashboardTrendsLoading(false);
+    }
+
+    prefetchDashboardData();
+  }, []);
 
   // Función para activar GPS
   const activateGps = useCallback(async () => {
@@ -232,7 +272,7 @@ export default function HomePage() {
             secondaryCta={
               activeView === "map"
                 ? {
-                    text: "Ver Dashboard",
+                    text: "Dashboard",
                     onClick: () => setActiveView("dashboard"),
                   }
                 : undefined
@@ -304,7 +344,14 @@ export default function HomePage() {
                 />
               )
             ) : (
-              <PublicDashboard />
+              <PublicDashboard
+                stats={dashboardStats}
+                loading={dashboardLoading}
+                error={dashboardError}
+                trends={dashboardTrends}
+                trendsLoading={dashboardTrendsLoading}
+                trendsError={dashboardTrendsError}
+              />
             )}
           </div>
         </main>
