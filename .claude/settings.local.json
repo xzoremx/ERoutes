@@ -7,7 +7,10 @@
       "Bash(git push)",
       "Bash(npm run build:*)",
       "Bash(npx tsc:*)",
-      "Bash(npx tsx:*)"
+      "Bash(npx tsx:*)",
+      "Bash(node -e:*)",
+      "Bash(docker build:*)",
+      "Bash(npm ci:*)"
     ]
   }
 }

@@ -3,14 +3,17 @@ import { z } from "zod";
 
 dotenv.config();
 
+// Transform: empty strings → undefined (Railway/Docker can pass VAR= as "")
+const optStr = z.string().transform(v => v === "" ? undefined : v).pipe(z.string().optional());
+
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().int().positive().default(3001),
-  DATABASE_URL: z.string().min(1).optional(),
+  DATABASE_URL: optStr,
   OSRM_BASE_URL: z.string().url().default("https://router.project-osrm.org"),
-  OSINERGMIN_DATA_URL: z.string().min(1).optional(),
-  OSINERGMIN_REGION_FILTER: z.string().min(1).optional(),
-  CORS_ALLOWED_ORIGINS: z.string().min(1).optional(),
+  OSINERGMIN_DATA_URL: optStr,
+  OSINERGMIN_REGION_FILTER: optStr,
+  CORS_ALLOWED_ORIGINS: optStr,
   LOG_LEVEL: z.string().min(1).default("info"),
   RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(15 * 60 * 1000),
   RATE_LIMIT_MAX: z.coerce.number().int().positive().default(100)
