@@ -10,7 +10,8 @@
       "Bash(npx tsx:*)",
       "Bash(node -e:*)",
       "Bash(docker build:*)",
-      "Bash(npm ci:*)"
+      "Bash(npm ci:*)",
+      "WebSearch"
     ]
   }
 }

@@ -3,8 +3,8 @@ import { z } from "zod";
 
 dotenv.config();
 
-// Transform: empty strings → undefined (Railway/Docker can pass VAR= as "")
-const optStr = z.string().transform(v => v === "" ? undefined : v).pipe(z.string().optional());
+// Optional string: acepta undefined (no definida) y "" (vacía) → ambos se tratan como undefined
+const optStr = z.string().optional().transform(v => v === "" ? undefined : v);
 
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
