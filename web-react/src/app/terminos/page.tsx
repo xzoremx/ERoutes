@@ -75,7 +75,7 @@ export default function TerminosPage() {
                             href="mailto:renato.huamani@pucp.edu.pe"
                             className="text-blue-600 hover:underline"
                         >
-                            renato.huamani@pucp.edu.pe
+                            mail
                         </a>
                     </p>
                 </div>

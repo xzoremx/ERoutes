@@ -183,7 +183,8 @@ OSINERGMIN_REGION_FILTER=LIMA
 ## Notas para Desarrollo
 
 - Los archivos SQL de migraciones usan prefijos numéricos para orden determinístico
-- Los seeds también usan prefijos (`010_`, `020_`)
+- Los seeds también usan prefijos (`010_`, `020_`, `030_`)
+  - `api/src/db/seeds/030_stations_prices.seed.sql` agrega estaciones+precios simulados para el dashboard público
 - El motor de recomendaciones considera: distancia, precio, y ruta óptima
 - **Routing**: OSRM (backend, gratuito) - calcula distancias y tiempos de ruta
 - **Mapas**: Leaflet + OpenStreetMap (frontend, gratuito) - visualización de mapas

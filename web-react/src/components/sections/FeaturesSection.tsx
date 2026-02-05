@@ -31,7 +31,7 @@ interface FeaturesSectionProps {
 }
 
 export function FeaturesSection({
-    badge = "One Platform",
+    badge = "ERoutes",
     title,
     description,
     features,

@@ -17,7 +17,7 @@ export function HeroSection({
     title,
     description,
     primaryCta = { text: "Navegar", href: "#" },
-    secondaryCta = { text: "Ver características", href: "#" },
+    secondaryCta = { text: "Ver Dashboard", href: "#" },
 }: HeroSectionProps) {
     return (
         <div
