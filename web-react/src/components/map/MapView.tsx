@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 
 // Tipos para marcadores
@@ -26,25 +26,46 @@ export type MapViewProps = {
   className?: string;
 };
 
-// Componente interno que usa Leaflet (solo se carga en cliente)
-function MapViewInternal({ center, zoom, markers = [], onMapClick, className }: MapViewProps) {
-  const [isClient, setIsClient] = useState(false);
+// Componente estable para recentrar el mapa y manejar clicks
+// Definido fuera de MapViewInternal para tener identidad estable (no se recrea en cada render)
+function MapController({
+  center,
+  zoom,
+  onMapClick,
+}: {
+  center: LatLng;
+  zoom: number;
+  onMapClick?: (latlng: LatLng) => void;
+}) {
+  const { useMap, useMapEvents } = require("react-leaflet");
+  const map = useMap();
+  const isFirstRender = useRef(true);
 
+  // Recentrar el mapa cuando cambia center/zoom (skip en mount inicial)
   useEffect(() => {
-    setIsClient(true);
-  }, []);
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    map.flyTo([center.lat, center.lng], zoom, { duration: 1.5 });
+  }, [map, center.lat, center.lng, zoom]);
 
-  if (!isClient) {
-    return (
-      <div className={className}>
-        <div className="h-[420px] w-full animate-pulse rounded border border-slate-200 bg-slate-100" />
-      </div>
-    );
-  }
+  // Manejar clicks en el mapa
+  useMapEvents({
+    click: (e: { latlng: { lat: number; lng: number } }) => {
+      if (onMapClick) {
+        onMapClick({ lat: e.latlng.lat, lng: e.latlng.lng });
+      }
+    },
+  });
 
-  // Importar Leaflet dinámicamente solo en cliente
+  return null;
+}
+
+// Componente interno que usa Leaflet (solo se carga en cliente via dynamic)
+function MapViewInternal({ center, zoom, markers = [], onMapClick, className }: MapViewProps) {
   const L = require("leaflet");
-  const { MapContainer, TileLayer, Marker, Popup, useMapEvents } = require("react-leaflet");
+  const { MapContainer, TileLayer, Marker, Popup } = require("react-leaflet");
 
   // Fix para iconos de Leaflet en Next.js
   delete (L.Icon.Default.prototype as { _getIconUrl?: unknown })._getIconUrl;
@@ -53,28 +74,6 @@ function MapViewInternal({ center, zoom, markers = [], onMapClick, className }: 
     iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
     shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
   });
-
-  // Componente para recentrar el mapa cuando cambia center/zoom
-  function RecenterMap({ center: c, zoom: z }: { center: LatLng; zoom: number }) {
-    const { useMap } = require("react-leaflet");
-    const map = useMap();
-    useEffect(() => {
-      map.flyTo([c.lat, c.lng], z, { duration: 1.5 });
-    }, [map, c.lat, c.lng, z]);
-    return null;
-  }
-
-  // Componente para manejar clicks en el mapa
-  function MapClickHandler() {
-    useMapEvents({
-      click: (e: { latlng: { lat: number; lng: number } }) => {
-        if (onMapClick) {
-          onMapClick({ lat: e.latlng.lat, lng: e.latlng.lng });
-        }
-      },
-    });
-    return null;
-  }
 
   // Crear icono personalizado para marcadores con precio
   function createPriceIcon(priceText: string, color: string = "#0f172a") {
@@ -132,8 +131,7 @@ function MapViewInternal({ center, zoom, markers = [], onMapClick, className }: 
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          <RecenterMap center={center} zoom={zoom} />
-          <MapClickHandler />
+          <MapController center={center} zoom={zoom} onMapClick={onMapClick} />
           {markers.map((m) => (
             <Marker
               key={m.id}

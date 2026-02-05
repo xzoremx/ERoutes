@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   MapPin,
@@ -18,7 +18,7 @@ import { HeroSection, FeaturesSection } from "@/components/sections";
 import { PublicDashboard } from "@/components/dashboard";
 
 // Map Components
-import { MapView, LatLng } from "@/components/map/MapView";
+import { MapView, LatLng, MapMarkerModel } from "@/components/map/MapView";
 
 // Lima centro como ubicación por defecto
 const LIMA_CENTER: LatLng = { lat: -12.0464, lng: -77.0428 };
@@ -117,18 +117,39 @@ export default function HomePage() {
     },
   ];
 
-  // Marcadores para el mapa
-  const mapMarkers = userLocation
-    ? [
-        {
-          id: "user-location",
-          position: userLocation,
-          title: "Tu ubicación",
-          label: "Estás aquí",
-          color: "#3b82f6", // Azul
-        },
-      ]
-    : [];
+  // Generar estaciones demo alrededor de la ubicación del usuario
+  const demoStations = useMemo((): MapMarkerModel[] => {
+    if (!userLocation) return [];
+    const { lat, lng } = userLocation;
+    return [
+      { id: "st-1", position: { lat: lat + 0.008, lng: lng - 0.005 }, title: "Grifo Repsol", label: "Av. Javier Prado 1230", priceText: "S/ 15.80", color: "#16a34a" },
+      { id: "st-2", position: { lat: lat - 0.006, lng: lng + 0.009 }, title: "Primax Express", label: "Av. Arequipa 890", priceText: "S/ 16.20", color: "#eab308" },
+      { id: "st-3", position: { lat: lat + 0.003, lng: lng + 0.012 }, title: "Petroperú", label: "Av. Brasil 456", priceText: "S/ 16.50", color: "#ef4444" },
+      { id: "st-4", position: { lat: lat - 0.010, lng: lng - 0.003 }, title: "Pecsa", label: "Av. Angamos 1567", priceText: "S/ 15.95", color: "#16a34a" },
+      { id: "st-5", position: { lat: lat + 0.005, lng: lng - 0.011 }, title: "Grifo Shell", label: "Av. Benavides 3420", priceText: "S/ 16.35", color: "#eab308" },
+    ];
+  }, [userLocation]);
+
+  // Marcadores para el mapa según modo
+  const mapMarkers = useMemo((): MapMarkerModel[] => {
+    if (!userLocation) return [];
+
+    const userMarker: MapMarkerModel = {
+      id: "user-location",
+      position: userLocation,
+      title: "Tu ubicación",
+      label: "Estás aquí",
+      color: "#3b82f6",
+    };
+
+    // Modo enhanced: usuario + estaciones con precios
+    if (gpsActivated) {
+      return [userMarker, ...demoStations];
+    }
+
+    // Modo básico: solo usuario
+    return [userMarker];
+  }, [userLocation, gpsActivated, demoStations]);
 
   return (
     <div className="antialiased min-h-screen overflow-x-hidden selection:bg-black selection:text-white text-slate-800 font-sans bg-[#ABCDE9] relative">
@@ -179,12 +200,53 @@ export default function HomePage() {
             style={{ animationDelay: "0.3s" }}
           >
             {activeView === "map" ? (
-              <MapView
-                center={userLocation || LIMA_CENTER}
-                zoom={userLocation ? 15 : 12}
-                markers={mapMarkers}
-                className="map-large"
-              />
+              gpsActivated ? (
+                /* Modo Enhanced: mapa con header, leyenda y estaciones */
+                <div
+                  className="w-full bg-[#FDFBF9] rounded-[32px] shadow-2xl border border-white/60 overflow-hidden"
+                  style={{ boxShadow: "0 50px 100px -20px rgba(50, 50, 93, 0.15), 0 30px 60px -30px rgba(0, 0, 0, 0.1)" }}
+                >
+                  <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-white/50 backdrop-blur-sm">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-[#F6F4F0] rounded-lg">
+                        <Fuel className="w-5 h-5 text-slate-700" />
+                      </div>
+                      <div>
+                        <h2 className="font-bold text-slate-900 font-nunito">Estaciones Cercanas</h2>
+                        <p className="text-sm text-slate-500">Precios de Gasohol 90</p>
+                      </div>
+                    </div>
+                    <div className="hidden sm:flex items-center gap-4 text-sm">
+                      <div className="flex items-center gap-2">
+                        <span className="w-3 h-3 rounded-full bg-green-500" />
+                        <span className="text-slate-600">Precio bajo</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="w-3 h-3 rounded-full bg-yellow-500" />
+                        <span className="text-slate-600">Precio medio</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="w-3 h-3 rounded-full bg-red-500" />
+                        <span className="text-slate-600">Precio alto</span>
+                      </div>
+                    </div>
+                  </div>
+                  <MapView
+                    center={userLocation || LIMA_CENTER}
+                    zoom={14}
+                    markers={mapMarkers}
+                    className="map-large"
+                  />
+                </div>
+              ) : (
+                /* Modo Básico: mapa simple sin estaciones */
+                <MapView
+                  center={userLocation || LIMA_CENTER}
+                  zoom={userLocation ? 15 : 12}
+                  markers={mapMarkers}
+                  className="map-large"
+                />
+              )
             ) : (
               <PublicDashboard />
             )}
