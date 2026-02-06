@@ -103,7 +103,7 @@ export function Navbar({
 
                 // Velocity → normalized target (-1..1); 12px delta = full swing
                 const deltaX = ev.clientX - lastClientX;
-                target = clamp(deltaX / 12, -1, 1);
+                target = clamp(-deltaX / 12, -1, 1);
                 lastClientX = ev.clientX;
             }
 
