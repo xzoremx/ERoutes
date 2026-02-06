@@ -60,11 +60,7 @@ export function Navbar({
 
         document.dispatchEvent(new CustomEvent("eroutes:pegman-drag-start"));
 
-        let lastX = e.clientX;
-
         const onMouseMove = (ev: MouseEvent) => {
-            lastX = ev.clientX;
-
             if (ghostRef.current) {
                 ghostRef.current.style.left = `${ev.clientX - grabOffsetX}px`;
                 ghostRef.current.style.top = `${ev.clientY - grabOffsetY}px`;
@@ -105,16 +101,18 @@ export function Navbar({
                 </span>
             </div>
 
-            <div className="hidden md:flex items-center gap-8 text-[15px] font-medium text-slate-700">
-                {links.map((link, index) => (
-                    <a
-                        key={index}
-                        href={link.href}
-                        className="hover:text-black transition-colors"
-                    >
-                        {link.label}
-                    </a>
-                ))}
+            <div className="flex items-center gap-4 md:gap-8 text-[15px] font-medium text-slate-700">
+                <div className="hidden md:flex items-center gap-8">
+                    {links.map((link, index) => (
+                        <a
+                            key={index}
+                            href={link.href}
+                            className="hover:text-black transition-colors"
+                        >
+                            {link.label}
+                        </a>
+                    ))}
+                </div>
 
                 {/* Pegman: sprite states inspired by leaflet-pegman */}
                 <button
