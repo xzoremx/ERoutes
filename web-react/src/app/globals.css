@@ -220,11 +220,11 @@ body {
 
   0%,
   100% {
-    transform: translateY(0);
+    transform: translateY(0) rotate(0deg);
   }
 
   50% {
-    transform: translateY(-1px);
+    transform: translateY(-1px) rotate(-4deg);
   }
 }
 
@@ -240,21 +240,11 @@ body {
 .pegman-control-ghost .pegman-button {
   width: 30px;
   height: 30px;
-  background-image: url("/assets/pegman/dangling-1x.png");
-  background-size: 30px 540px;
+  background-image: url("/assets/pegman/ghost-pegman.png");
+  background-size: 30px 30px;
   background-position: 0 0;
-  transform-origin: center;
-  animation: pegman-dangling 1.4s steps(18, end) infinite alternate, pegman-drag-bob 0.75s ease-in-out infinite;
-}
-
-@keyframes pegman-dangling {
-  from {
-    background-position: 0 0;
-  }
-
-  to {
-    background-position: 0 -510px;
-  }
+  transform-origin: 50% 12%;
+  animation: pegman-drag-bob 0.75s ease-in-out infinite;
 }
 
 /* Large map style for recommendations page */
