@@ -151,7 +151,7 @@ export function Navbar({
                         <a
                             key={index}
                             href={link.href}
-                            className="hover:brightness-125 transition-all"
+                            className=""
                         >
                             {link.label}
                         </a>
