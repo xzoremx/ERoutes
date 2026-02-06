@@ -145,13 +145,13 @@ export function Navbar({
                 </span>
             </div>
 
-            <div className="flex items-center gap-2 md:gap-3 text-[15px] font-medium text-[#F2B832]">
+            <div className="flex items-center gap-2 md:gap-3 text-[15px] font-medium text-[#E0AB2F]">
                 <div className="hidden md:flex items-center gap-8">
                     {links.map((link, index) => (
                         <a
                             key={index}
                             href={link.href}
-                            className="hover:text-black transition-colors"
+                            className="hover:brightness-125 transition-all"
                         >
                             {link.label}
                         </a>
@@ -163,9 +163,8 @@ export function Navbar({
                     ref={pegmanRef}
                     type="button"
                     onMouseDown={handleMouseDown}
-                    className={`pegman-control select-none appearance-none border-0 p-0 leading-none transition-opacity duration-200 ${
-                        isDragging ? "opacity-30 dragging" : ""
-                    }`}
+                    className={`pegman-control select-none appearance-none border-0 p-0 leading-none transition-opacity duration-200 ${isDragging ? "opacity-30 dragging" : ""
+                        }`}
                     title="Arrastra al mapa"
                     aria-label="Arrastra pegman al mapa"
                     style={{ width: `${PEGMAN_SIZE}px`, height: `${PEGMAN_SIZE}px` }}
