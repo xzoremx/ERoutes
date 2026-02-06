@@ -220,11 +220,15 @@ body {
 
   0%,
   100% {
-    transform: translateY(0) rotate(0deg);
+    transform: rotate(0deg) translateY(0);
   }
 
-  50% {
-    transform: translateY(-1px) rotate(-4deg);
+  25% {
+    transform: rotate(8deg) translateY(-1.5px);
+  }
+
+  75% {
+    transform: rotate(-8deg) translateY(-1.5px);
   }
 }
 
@@ -244,7 +248,7 @@ body {
   background-size: 30px 30px;
   background-position: 0 0 !important;
   transform-origin: 50% 12%;
-  animation: pegman-drag-bob 0.75s ease-in-out infinite;
+  animation: pegman-drag-bob 1.2s ease-in-out infinite;
 }
 
 /* Large map style for recommendations page */

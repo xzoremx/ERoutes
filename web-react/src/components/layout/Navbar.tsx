@@ -55,6 +55,31 @@ export function Navbar({
         document.body.appendChild(ghost);
         ghostRef.current = ghost;
 
+        // --- Sway engine: velocity-responsive tilt on ghost container ---
+        let lastClientX = e.clientX;
+        let currentTilt = 0;
+        let targetTilt = 0;
+
+        // After pickup animation (220ms) ends, clear it so JS can drive transform
+        const pickupTimer = setTimeout(() => {
+            if (ghostRef.current) {
+                ghostRef.current.style.animation = "none";
+            }
+        }, 250);
+
+        // rAF loop: smooth-lerp tilt toward target, decay when idle
+        const updateTilt = () => {
+            currentTilt += (targetTilt - currentTilt) * 0.18;
+            targetTilt *= 0.92;
+            if (Math.abs(currentTilt) < 0.3) currentTilt = 0;
+            if (ghostRef.current) {
+                ghostRef.current.style.transform = `rotate(${currentTilt.toFixed(1)}deg)`;
+            }
+            animFrame = requestAnimationFrame(updateTilt);
+        };
+        let animFrame = requestAnimationFrame(updateTilt);
+        // --- End sway engine ---
+
         document.body.style.cursor = "grabbing";
         document.body.style.userSelect = "none";
 
@@ -64,6 +89,11 @@ export function Navbar({
             if (ghostRef.current) {
                 ghostRef.current.style.left = `${ev.clientX - grabOffsetX}px`;
                 ghostRef.current.style.top = `${ev.clientY - grabOffsetY}px`;
+
+                // Velocity → tilt
+                const deltaX = ev.clientX - lastClientX;
+                targetTilt = clamp(deltaX * 2.5, -25, 25);
+                lastClientX = ev.clientX;
             }
 
             document.dispatchEvent(new CustomEvent("eroutes:pegman-drag-move", {
@@ -72,6 +102,9 @@ export function Navbar({
         };
 
         const onMouseUp = (ev: MouseEvent) => {
+            clearTimeout(pickupTimer);
+            cancelAnimationFrame(animFrame);
+
             document.dispatchEvent(new CustomEvent("eroutes:pegman-drag-end", {
                 detail: { clientX: ev.clientX, clientY: ev.clientY },
             }));
