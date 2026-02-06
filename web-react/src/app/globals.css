@@ -244,15 +244,7 @@ body {
   background-size: 30px 540px;
   background-position: 0 0;
   transform-origin: center;
-  animation: pegman-dangling 700ms steps(18) infinite, pegman-drag-bob 0.45s ease-in-out infinite;
-}
-
-.pegman-control-ghost.dir-left .pegman-button {
-  transform: scaleX(-1);
-}
-
-.pegman-control-ghost.dir-right .pegman-button {
-  transform: scaleX(1);
+  animation: pegman-dangling 1.4s steps(18, end) infinite alternate, pegman-drag-bob 0.75s ease-in-out infinite;
 }
 
 @keyframes pegman-dangling {
@@ -261,7 +253,7 @@ body {
   }
 
   to {
-    background-position: 0 -540px;
+    background-position: 0 -510px;
   }
 }
 

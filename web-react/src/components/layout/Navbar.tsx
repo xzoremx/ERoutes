@@ -63,15 +63,11 @@ export function Navbar({
         let lastX = e.clientX;
 
         const onMouseMove = (ev: MouseEvent) => {
-            const dx = ev.clientX - lastX;
             lastX = ev.clientX;
 
             if (ghostRef.current) {
                 ghostRef.current.style.left = `${ev.clientX - grabOffsetX}px`;
                 ghostRef.current.style.top = `${ev.clientY - grabOffsetY}px`;
-                ghostRef.current.classList.remove("dir-left", "dir-right");
-                if (dx < -1) ghostRef.current.classList.add("dir-left");
-                if (dx > 1) ghostRef.current.classList.add("dir-right");
             }
 
             document.dispatchEvent(new CustomEvent("eroutes:pegman-drag-move", {
