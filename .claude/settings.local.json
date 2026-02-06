@@ -11,7 +11,9 @@
       "Bash(node -e:*)",
       "Bash(docker build:*)",
       "Bash(npm ci:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(npx image-size:*)",
+      "Bash(python -c:*)"
     ]
   }
 }

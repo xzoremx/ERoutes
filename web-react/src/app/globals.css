@@ -242,13 +242,12 @@ body {
 }
 
 .pegman-control.pegman-control-ghost .pegman-button {
-  width: 30px;
-  height: 30px;
-  background-image: url("/assets/pegman/ghost-pegman.png");
-  background-size: 30px 30px;
-  background-position: 0 0 !important;
+  width: 48px;
+  height: 48px;
+  background-image: url("/assets/pegman/dangling-1x.png");
+  background-size: 48px auto;
+  background-position: 0 -384px; /* center frame (8 × 48), JS overrides */
   transform-origin: 50% 12%;
-  animation: pegman-drag-bob 1.2s ease-in-out infinite;
 }
 
 /* Large map style for recommendations page */

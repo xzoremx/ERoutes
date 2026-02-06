@@ -14,6 +14,9 @@ interface NavbarProps {
 }
 
 const PEGMAN_SIZE = 30;
+const GHOST_SIZE = 48;
+const CENTER_FRAME = 8;
+const MAX_FRAME = 16;
 
 function clamp(v: number, min: number, max: number) {
     return Math.max(min, Math.min(max, v));
@@ -36,9 +39,9 @@ export function Navbar({
 
         setIsDragging(true);
 
-        const sourceRect = pegmanControl.getBoundingClientRect();
-        const grabOffsetX = clamp(e.clientX - sourceRect.left, 0, sourceRect.width);
-        const grabOffsetY = clamp(e.clientY - sourceRect.top, 0, sourceRect.height);
+        // Ghost grab offset: centered horizontally, near top vertically (hang point)
+        const ghostGrabX = GHOST_SIZE / 2;
+        const ghostGrabY = GHOST_SIZE * 0.12;
 
         const ghost = document.createElement("div");
         ghost.className = "pegman-control pegman-control-ghost";
@@ -47,38 +50,46 @@ export function Navbar({
             position: fixed;
             z-index: 99999;
             pointer-events: none;
-            width: ${sourceRect.width}px;
-            height: ${sourceRect.height}px;
-            left: ${e.clientX - grabOffsetX}px;
-            top: ${e.clientY - grabOffsetY}px;
+            width: ${GHOST_SIZE}px;
+            height: ${GHOST_SIZE}px;
+            left: ${e.clientX - ghostGrabX}px;
+            top: ${e.clientY - ghostGrabY}px;
         `;
         document.body.appendChild(ghost);
         ghostRef.current = ghost;
 
-        // --- Sway engine: velocity-responsive tilt on ghost container ---
-        let lastClientX = e.clientX;
-        let currentTilt = 0;
-        let targetTilt = 0;
+        const pegmanSpan = ghost.querySelector(".pegman-button") as HTMLElement;
 
-        // After pickup animation (220ms) ends, clear it so JS can drive transform
+        // --- Sprite sway engine: velocity → frame index → background-position ---
+        let lastClientX = e.clientX;
+        let smoothed = 0;   // smoothed normalized velocity, range -1..1
+        let target = 0;
+
+        // After pickup animation (220ms) ends, clear it so JS can drive updates
         const pickupTimer = setTimeout(() => {
             if (ghostRef.current) {
                 ghostRef.current.style.animation = "none";
             }
         }, 250);
 
-        // rAF loop: smooth-lerp tilt toward target, decay when idle
-        const updateTilt = () => {
-            currentTilt += (targetTilt - currentTilt) * 0.18;
-            targetTilt *= 0.92;
-            if (Math.abs(currentTilt) < 0.3) currentTilt = 0;
-            if (ghostRef.current) {
-                ghostRef.current.style.transform = `rotate(${currentTilt.toFixed(1)}deg)`;
+        // rAF loop: lerp smoothed toward target, decay target, pick frame
+        const updateFrame = () => {
+            smoothed += (target - smoothed) * 0.18;
+            target *= 0.92;
+            if (Math.abs(smoothed) < 0.02) smoothed = 0;
+
+            const frameIndex = clamp(
+                CENTER_FRAME + Math.round(smoothed * 8),
+                0,
+                MAX_FRAME,
+            );
+            if (pegmanSpan) {
+                pegmanSpan.style.backgroundPosition = `0 -${frameIndex * GHOST_SIZE}px`;
             }
-            animFrame = requestAnimationFrame(updateTilt);
+            animFrame = requestAnimationFrame(updateFrame);
         };
-        let animFrame = requestAnimationFrame(updateTilt);
-        // --- End sway engine ---
+        let animFrame = requestAnimationFrame(updateFrame);
+        // --- End sprite sway engine ---
 
         document.body.style.cursor = "grabbing";
         document.body.style.userSelect = "none";
@@ -87,12 +98,12 @@ export function Navbar({
 
         const onMouseMove = (ev: MouseEvent) => {
             if (ghostRef.current) {
-                ghostRef.current.style.left = `${ev.clientX - grabOffsetX}px`;
-                ghostRef.current.style.top = `${ev.clientY - grabOffsetY}px`;
+                ghostRef.current.style.left = `${ev.clientX - ghostGrabX}px`;
+                ghostRef.current.style.top = `${ev.clientY - ghostGrabY}px`;
 
-                // Velocity → tilt
+                // Velocity → normalized target (-1..1); 12px delta = full swing
                 const deltaX = ev.clientX - lastClientX;
-                targetTilt = clamp(deltaX * 2.5, -25, 25);
+                target = clamp(deltaX / 12, -1, 1);
                 lastClientX = ev.clientX;
             }
 
