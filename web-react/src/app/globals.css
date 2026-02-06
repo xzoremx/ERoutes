@@ -237,12 +237,12 @@ body {
   animation: pegman-pickup 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
-.pegman-control-ghost .pegman-button {
+.pegman-control.pegman-control-ghost .pegman-button {
   width: 30px;
   height: 30px;
   background-image: url("/assets/pegman/ghost-pegman.png");
   background-size: 30px 30px;
-  background-position: 0 0;
+  background-position: 0 0 !important;
   transform-origin: 50% 12%;
   animation: pegman-drag-bob 0.75s ease-in-out infinite;
 }

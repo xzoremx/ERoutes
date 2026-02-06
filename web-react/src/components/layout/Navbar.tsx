@@ -41,7 +41,7 @@ export function Navbar({
         const grabOffsetY = clamp(e.clientY - sourceRect.top, 0, sourceRect.height);
 
         const ghost = document.createElement("div");
-        ghost.className = "pegman-control pegman-control-ghost dragging";
+        ghost.className = "pegman-control pegman-control-ghost";
         ghost.innerHTML = '<span class="pegman-button" aria-hidden="true"></span>';
         ghost.style.cssText = `
             position: fixed;
