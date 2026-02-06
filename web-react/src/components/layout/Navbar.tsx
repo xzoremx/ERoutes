@@ -145,7 +145,7 @@ export function Navbar({
                 </span>
             </div>
 
-            <div className="flex items-center gap-2 md:gap-3 text-[15px] font-medium text-amber-700">
+            <div className="flex items-center gap-2 md:gap-3 text-[15px] font-medium text-[#F2B832]">
                 <div className="hidden md:flex items-center gap-8">
                     {links.map((link, index) => (
                         <a
